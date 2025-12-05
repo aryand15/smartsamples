@@ -34,6 +34,10 @@ from passlib.context import CryptContext
 import shutil
 from typing import Optional
 import random
+from mutagen import File as MutagenFile
+from mutagen.mp3 import MP3
+from mutagen.wave import WAVE
+from mutagen.oggvorbis import OggVorbis
 
 # --- Initialization ---
 app = FastAPI()
@@ -65,6 +69,7 @@ UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
 # File upload constraints
 MAX_FILE_SIZE = 50 * 1024 * 1024  # 50 MB in bytes
+MAX_DURATION_SECONDS = 30  # Maximum audio duration in seconds
 ALLOWED_EXTENSIONS = {'.mp3', '.wav', '.ogg'}
 
 # Static files and templates
@@ -571,12 +576,48 @@ async def upload_sample(
             }
         )
 
-    # Save file
+    # Save file temporarily to check duration
     filename = f"{secrets.token_hex(16)}{file_ext}"
     file_path = UPLOAD_DIR / filename
 
     with file_path.open("wb") as buffer:
         buffer.write(content)
+
+    # Validate audio duration
+    try:
+        audio = MutagenFile(str(file_path))
+        if audio is None or not hasattr(audio.info, 'length'):
+            # Clean up the file
+            file_path.unlink(missing_ok=True)
+            return templates.TemplateResponse(
+                "partials/upload_result.html",
+                {
+                    "request": request,
+                    "error": "Unable to read audio file. File may be corrupted."
+                }
+            )
+
+        duration = audio.info.length
+        if duration > MAX_DURATION_SECONDS:
+            # Clean up the file
+            file_path.unlink(missing_ok=True)
+            return templates.TemplateResponse(
+                "partials/upload_result.html",
+                {
+                    "request": request,
+                    "error": f"Audio too long. Maximum duration is {MAX_DURATION_SECONDS} seconds (file is {duration:.1f} seconds)."
+                }
+            )
+    except Exception as e:
+        # Clean up the file on error
+        file_path.unlink(missing_ok=True)
+        return templates.TemplateResponse(
+            "partials/upload_result.html",
+            {
+                "request": request,
+                "error": f"Error processing audio file: {str(e)}"
+            }
+        )
 
     # Create sample record
     new_sample = Sample(
@@ -652,6 +693,111 @@ async def user_samples(
     return templates.TemplateResponse(
         "partials/user_samples.html",
         {"request": request, "samples": sample_data}
+    )
+
+
+@app.get("/sample/{sample_id}/edit-title-modal", response_class=HTMLResponse)
+async def get_edit_title_modal(
+    sample_id: int,
+    request: Request,
+    session: Session = Depends(get_session)
+):
+    """
+    Get the edit title modal for a sample.
+
+    Only the sample owner can edit their sample titles.
+
+    Args:
+        sample_id: ID of the sample to edit
+        request: HTTP request
+        session: Database session (injected)
+
+    Returns:
+        HTMLResponse: Edit title modal HTML
+
+    Raises:
+        HTTPException: 404 if sample not found, 403 if not authorized, 401 if not authenticated
+    """
+    user = get_current_user(request, session)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    sample = session.get(Sample, sample_id)
+    if not sample:
+        raise HTTPException(status_code=404, detail="Sample not found")
+
+    if sample.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to edit this sample")
+
+    return templates.TemplateResponse(
+        "partials/edit_title_modal.html",
+        {"request": request, "sample": sample}
+    )
+
+
+@app.put("/sample/{sample_id}/title", response_class=HTMLResponse)
+async def update_sample_title(
+    sample_id: int,
+    request: Request,
+    updated_title: str = Form(...),
+    session: Session = Depends(get_session)
+):
+    """
+    Update a sample's title.
+
+    Only the sample owner can update their sample titles.
+
+    Args:
+        sample_id: ID of the sample to update
+        request: HTTP request
+        updated_title: New title for the sample
+        session: Database session (injected)
+
+    Returns:
+        HTMLResponse: Updated sample card HTML
+
+    Raises:
+        HTTPException: 404 if sample not found, 403 if not authorized, 401 if not authenticated
+    """
+    user = get_current_user(request, session)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+
+    sample = session.get(Sample, sample_id)
+    if not sample:
+        raise HTTPException(status_code=404, detail="Sample not found")
+
+    if sample.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Not authorized to edit this sample")
+
+    # Validate title
+    updated_title = updated_title.strip()
+    if not updated_title:
+        raise HTTPException(status_code=400, detail="Title cannot be empty")
+
+    # Update the title
+    sample.title = updated_title
+    session.add(sample)
+    session.commit()
+    session.refresh(sample)
+
+    # Get upvote and download counts for the updated card
+    upvote_count = session.exec(
+        select(func.count(Upvote.id)).where(Upvote.sample_id == sample.id)
+    ).one()
+
+    download_count = session.exec(
+        select(func.count(Download.id)).where(Download.sample_id == sample.id)
+    ).one()
+
+    return templates.TemplateResponse(
+        "partials/single_sample_card.html",
+        {
+            "request": request,
+            "sample": sample,
+            "upvote_count": upvote_count,
+            "download_count": download_count
+        }
     )
 
 

@@ -64,5 +64,27 @@
         const display = form.style.display;
         form.style.display = display === 'none' ? 'block' : 'none';
     }
+
+    function closeModal() {
+        const modalContainer = document.getElementById('modal-container');
+        modalContainer.innerHTML = '';
+    }
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeModal();
+        }
+    });
+
+    // Listen for successful form submission to close modal
+    document.body.addEventListener('htmx:afterRequest', function(event) {
+        // Check if the request was a PUT to update sample title
+        if (event.detail.xhr.status === 200 && event.detail.pathInfo.requestPath.includes('/title')) {
+            closeModal();
+        }
+    });
+
+    
 </script>
 {% endblock %}

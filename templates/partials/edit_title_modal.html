@@ -1,0 +1,38 @@
+<div class="modal-overlay" onclick="closeModal()">
+    <div class="modal-container" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <h3>Edit Sample Title</h3>
+            <button class="modal-close" onclick="closeModal()" aria-label="Close modal">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </button>
+        </div>
+
+        <form
+            hx-put="/sample/{{ sample.id }}/title"
+            hx-target="#sample-card-{{ sample.id }}"
+            hx-swap="outerHTML"
+        >
+            <div class="modal-body">
+                <label for="updated_title" class="form-label">Sample Title</label>
+                <input
+                    type="text"
+                    id="updated_title"
+                    name="updated_title"
+                    class="form-input"
+                    value="{{ sample.title }}"
+                    maxlength="100"
+                    required
+                />
+                <p class="form-hint">Enter a descriptive title for your sample (max 100 characters)</p>
+            </div>
+
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn-primary">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
