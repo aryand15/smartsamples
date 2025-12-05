@@ -1,0 +1,20 @@
+<div class="profile-bio">{{ bio or 'No bio yet. Click edit to add one!' }}</div>
+<button
+    onclick="toggleEditBio()"
+    style="margin-top: 1rem; padding: 0.7rem 1.5rem; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-secondary); cursor: pointer; font-family: 'Outfit', sans-serif; font-weight: 600;"
+>
+    Edit Bio
+</button>
+<div id="bio-edit-form" style="display: none; margin-top: 1rem;">
+    <form hx-put="/edit-profile/{{ user.id }}" hx-target="#bio-container">
+        <textarea
+            name="updated_bio"
+            class="form-input"
+            rows="4"
+            placeholder="Tell us about yourself..."
+            style="width: 100%; margin-bottom: 1rem;"
+        >{{ bio }}</textarea>
+        <button type="submit" class="btn-primary" style="width: auto; padding: 0.7rem 1.5rem;">Save</button>
+        <button type="button" onclick="toggleEditBio()" style="margin-left: 0.5rem; padding: 0.7rem 1.5rem; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-secondary); cursor: pointer; font-family: 'Outfit', sans-serif; font-weight: 600;">Cancel</button>
+    </form>
+</div>

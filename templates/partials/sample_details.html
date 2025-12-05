@@ -1,0 +1,32 @@
+<div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 16px; padding: 2rem;">
+    <h3 style="font-size: 1.5rem; margin-bottom: 1rem;">{{ sample.title }}</h3>
+
+    <div style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+        <p style="margin-bottom: 0.5rem;">
+            <strong>Uploaded by:</strong>
+            <a href="/profile/{{ uploader.id }}" style="color: var(--accent-primary); text-decoration: none;">{{ uploader.username }}</a>
+        </p>
+        {% if sample.instrument %}
+        <p style="margin-bottom: 0.5rem;"><strong>Instrument:</strong> {{ sample.instrument }}</p>
+        {% endif %}
+        {% if sample.mood %}
+        <p style="margin-bottom: 0.5rem;"><strong>Mood:</strong> {{ sample.mood }}</p>
+        {% endif %}
+        <p style="margin-bottom: 0.5rem;"><strong>Uploaded:</strong> {{ sample.created_at.strftime('%B %d, %Y') }}</p>
+    </div>
+
+    <div style="display: flex; gap: 2rem; margin-bottom: 1.5rem;">
+        <div>
+            <div style="font-size: 1.8rem; font-weight: 700; color: var(--accent-primary);">{{ upvote_count }}</div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">Upvotes</div>
+        </div>
+        <div>
+            <div style="font-size: 1.8rem; font-weight: 700; color: var(--accent-secondary);">{{ download_count }}</div>
+            <div style="color: var(--text-secondary); font-size: 0.9rem;">Downloads</div>
+        </div>
+    </div>
+
+    <audio controls style="width: 100%;" preload="metadata">
+        <source src="{{ sample.file_url }}" type="audio/mpeg">
+    </audio>
+</div>

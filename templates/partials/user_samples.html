@@ -1,0 +1,87 @@
+{% for item in samples %}
+<div class="sample-card">
+    <div class="sample-header">
+        <div>
+            <h3 class="sample-title">{{ item.sample.title }}</h3>
+        </div>
+    </div>
+
+    {% if item.sample.instrument or item.sample.mood %}
+    <div class="sample-meta">
+        {% if item.sample.instrument %}
+        <span class="meta-tag">{{ item.sample.instrument }}</span>
+        {% endif %}
+        {% if item.sample.mood %}
+        <span class="meta-tag">{{ item.sample.mood }}</span>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <audio controls class="sample-audio" preload="metadata">
+        <source src="{{ item.sample.file_url }}" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <div class="sample-actions">
+        <div style="flex: 1; text-align: center; padding: 0.7rem; background: var(--bg-tertiary); border-radius: 10px; color: var(--text-secondary);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" style="display: inline; vertical-align: middle; margin-right: 0.25rem;">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+            {{ item.upvote_count }}
+        </div>
+
+        <div style="flex: 1; text-align: center; padding: 0.7rem; background: var(--bg-tertiary); border-radius: 10px; color: var(--text-secondary);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline; vertical-align: middle; margin-right: 0.25rem;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            {{ item.download_count }}
+        </div>
+
+        <button
+            class="btn-icon"
+            style="background: var(--accent-pink); color: white;"
+            hx-delete="/sample/{{ item.sample.id }}"
+            hx-confirm="Are you sure you want to delete this sample?"
+            hx-target="closest .sample-card"
+            hx-swap="outerHTML swap:1s"
+            title="Delete sample"
+        >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+                <line x1="10" y1="11" x2="10" y2="17"/>
+                <line x1="14" y1="11" x2="14" y2="17"/>
+            </svg>
+        </button>
+    </div>
+</div>
+{% endfor %}
+
+{% if not samples %}
+<div style="text-align: center; padding: 4rem 2rem; color: var(--text-secondary); grid-column: 1 / -1;">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 1rem; opacity: 0.5;">
+        <path d="M9 18V5l12-2v13"/>
+        <circle cx="6" cy="18" r="3"/>
+        <circle cx="18" cy="16" r="3"/>
+    </svg>
+    <p style="font-size: 1.2rem; margin-bottom: 0.5rem;">No samples uploaded yet</p>
+    <p style="color: var(--text-muted);">Upload your first sample to share with the community!</p>
+</div>
+{% endif %}
+
+<script>
+    // Update stats
+    document.getElementById('total-samples').textContent = '{{ samples|length }}';
+
+    let totalUpvotes = 0;
+    let totalDownloads = 0;
+    {% for item in samples %}
+    totalUpvotes += {{ item.upvote_count }};
+    totalDownloads += {{ item.download_count }};
+    {% endfor %}
+
+    document.getElementById('total-upvotes').textContent = totalUpvotes;
+    document.getElementById('total-downloads').textContent = totalDownloads;
+</script>

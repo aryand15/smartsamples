@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Search Samples - SmartSamples{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1 class="page-title">Discover Samples</h1>
+    <p class="page-subtitle">Find the perfect sound for your next track</p>
+</div>
+
+<div class="search-form">
+    <form hx-post="/recommend-samples" hx-target="#sample-results" hx-indicator=".search-indicator">
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label" for="instrument">Instrument</label>
+                <input
+                    type="text"
+                    id="instrument"
+                    name="instrument"
+                    class="form-input"
+                    placeholder="e.g., piano, guitar, synth"
+                >
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="mood">Mood</label>
+                <input
+                    type="text"
+                    id="mood"
+                    name="mood"
+                    class="form-input"
+                    placeholder="e.g., dark, uplifting, chill"
+                >
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="limit">Results</label>
+                <input
+                    type="number"
+                    id="limit"
+                    name="limit"
+                    class="form-input"
+                    value="10"
+                    min="1"
+                    max="50"
+                >
+            </div>
+        </div>
+
+        <button type="submit" class="btn-search">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+            </svg>
+            Search Samples
+            <span class="search-indicator htmx-indicator">
+                <div class="loading-spinner"></div>
+            </span>
+        </button>
+    </form>
+</div>
+
+<div id="sample-results" class="samples-grid">
+    <!-- Sample results will be loaded here via HTMX -->
+</div>
+
+<script>
+function trackDownload(sampleId) {
+    // Track the download via HTMX after the browser starts downloading
+    htmx.ajax('POST', '/sample/' + sampleId + '/download', {
+        target: '#download-sample-' + sampleId,
+        swap: 'outerHTML'
+    });
+}
+</script>
+{% endblock %}

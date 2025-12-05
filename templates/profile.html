@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile_user.username }}'s Profile - SmartSamples{% endblock %}
+
+{% block content %}
+<div class="profile-header">
+    <div class="profile-info">
+        <h1 class="profile-username">{{ profile_user.username }}</h1>
+        <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">{{ profile_user.email }}</p>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Member since {{ profile_user.created_at.strftime('%B %Y') }}</p>
+
+        <div class="profile-stats" hx-get="/user/{{ profile_user.id }}/samples" hx-trigger="load" hx-target="#user-samples">
+            <div class="stat-item">
+                <span class="stat-value" id="total-samples">-</span>
+                <span class="stat-label">Samples</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="total-upvotes">-</span>
+                <span class="stat-label">Upvotes</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="total-downloads">-</span>
+                <span class="stat-label">Downloads</span>
+            </div>
+        </div>
+
+        {% if user.id == profile_user.id %}
+        <div id="bio-container">
+            <div class="profile-bio">{{ profile_user.bio or 'No bio yet. Click edit to add one!' }}</div>
+            <button
+                onclick="toggleEditBio()"
+                style="margin-top: 1rem; padding: 0.7rem 1.5rem; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-secondary); cursor: pointer; font-family: 'Outfit', sans-serif; font-weight: 600;"
+            >
+                Edit Bio
+            </button>
+            <div id="bio-edit-form" style="display: none; margin-top: 1rem;">
+                <form hx-put="/edit-profile/{{ profile_user.id }}" hx-target="#bio-container">
+                    <textarea
+                        name="updated_bio"
+                        class="form-input"
+                        rows="4"
+                        placeholder="Tell us about yourself..."
+                        style="width: 100%; margin-bottom: 1rem;"
+                    >{{ profile_user.bio }}</textarea>
+                    <button type="submit" class="btn-primary" style="width: auto; padding: 0.7rem 1.5rem;">Save</button>
+                    <button type="button" onclick="toggleEditBio()" style="margin-left: 0.5rem; padding: 0.7rem 1.5rem; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: 10px; color: var(--text-secondary); cursor: pointer; font-family: 'Outfit', sans-serif; font-weight: 600;">Cancel</button>
+                </form>
+            </div>
+        </div>
+        {% else %}
+        <div class="profile-bio">{{ profile_user.bio or 'This user hasn\'t added a bio yet.' }}</div>
+        {% endif %}
+    </div>
+</div>
+
+<h2 class="section-title">Uploaded Samples</h2>
+<div id="user-samples" class="samples-grid">
+    <!-- Samples will be loaded via HTMX -->
+</div>
+
+<script>
+    function toggleEditBio() {
+        const form = document.getElementById('bio-edit-form');
+        const display = form.style.display;
+        form.style.display = display === 'none' ? 'block' : 'none';
+    }
+</script>
+{% endblock %}

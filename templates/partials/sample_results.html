@@ -1,0 +1,69 @@
+{% for item in samples %}
+<div class="sample-card">
+    <div class="sample-header">
+        <div>
+            <h3 class="sample-title">{{ item.sample.title }}</h3>
+            <a href="/profile/{{ item.sample.user_id }}" class="sample-creator">by {{ item.username }}</a>
+        </div>
+    </div>
+
+    {% if item.sample.instrument or item.sample.mood %}
+    <div class="sample-meta">
+        {% if item.sample.instrument %}
+        <span class="meta-tag">{{ item.sample.instrument }}</span>
+        {% endif %}
+        {% if item.sample.mood %}
+        <span class="meta-tag">{{ item.sample.mood }}</span>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <audio controls class="sample-audio" preload="metadata">
+        <source src="{{ item.sample.file_url }}" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <div class="sample-actions">
+        <div id="upvote-sample-{{ item.sample.id }}">
+            <button
+                class="btn-icon btn-upvote {% if item.user_upvoted %}upvoted{% endif %}"
+                hx-post="/sample/{{ item.sample.id }}/upvote"
+                hx-target="#upvote-sample-{{ item.sample.id }}"
+                hx-swap="outerHTML"
+            >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="{% if item.user_upvoted %}currentColor{% else %}none{% endif %}" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+                {{ item.upvote_count }}
+            </button>
+        </div>
+
+        <div id="download-sample-{{ item.sample.id }}">
+            <a
+                href="{{ item.sample.file_url }}"
+                download
+                class="btn-icon btn-download"
+                onclick="trackDownload({{ item.sample.id }})"
+            >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7 10 12 15 17 10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span id="download-count-{{ item.sample.id }}">{{ item.download_count }}</span>
+            </a>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% if not samples %}
+<div style="text-align: center; padding: 4rem 2rem; color: var(--text-secondary);">
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin: 0 auto 1rem; opacity: 0.5;">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="m21 21-4.35-4.35"/>
+    </svg>
+    <p style="font-size: 1.2rem; margin-bottom: 0.5rem;">No samples found</p>
+    <p style="color: var(--text-muted);">Try adjusting your search filters or upload a sample to get started!</p>
+</div>
+{% endif %}
